@@ -1,0 +1,50 @@
+// NSessionNative.idl : IDL source for NSessionNative
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (NSessionNative.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(7D2CA1FD-A8BF-4826-A9F3-4C91108C8C97),
+	dual,
+	nonextensible,
+	pointer_default(unique)
+]
+interface IReadWriteSession : IDispatch{
+};
+[
+	object,
+	uuid(B275E749-F3D8-48DF-B34A-39900300A37F),
+	dual,
+	nonextensible,
+	pointer_default(unique)
+]
+interface IReadOnlySession : IDispatch{
+};
+[
+	uuid(EFBF0C2B-6DEE-4D6A-B6B0-A84C0ECD9CF3),
+	version(1.0),
+]
+library NSessionNativeLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(39C42850-A349-45A0-8FCE-488519F6FEC2)		
+	]
+	coclass ReadWriteSession
+	{
+		[default] interface IReadWriteSession;
+	};
+	[
+		uuid(5F07415C-0C7B-4B9C-A067-93FCD4581FF3)		
+	]
+	coclass ReadOnlySession
+	{
+		[default] interface IReadOnlySession;
+	};
+};
+

@@ -16,3 +16,5 @@ glob:TestResults
 glob:[Tt]humbs.db
 glob:src/Server/Packages/*.nupkg
 DebugConstants.cs
+glob:Debug
+glob:Release

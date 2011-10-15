@@ -1,0 +1,26 @@
+HKCR
+{
+	NSession.Session.1 = s 'ReadWriteSession Class'
+	{
+		CLSID = s '{39C42850-A349-45A0-8FCE-488519F6FEC2}'
+	}
+	NSession.Session = s 'ReadWriteSession Class'
+	{		
+		CurVer = s 'NSession.Session.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {39C42850-A349-45A0-8FCE-488519F6FEC2} = s 'ReadWriteSession Class'
+		{
+			ProgID = s 'NSession.Session.1'
+			VersionIndependentProgID = s 'NSession.Session'
+			ForceRemove Programmable
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			TypeLib = s '{EFBF0C2B-6DEE-4D6A-B6B0-A84C0ECD9CF3}'
+			Version = s '1.0'
+		}
+	}
+}

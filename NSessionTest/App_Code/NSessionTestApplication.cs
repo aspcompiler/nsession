@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.SessionState;
 using System.Reflection;
+using System.Configuration;
 
 /// <summary>
 /// Summary description for NSessionTestApplication
@@ -25,7 +26,7 @@ public class NSessionTestApplication : HttpApplication
                 if (storeType.Name.Equals("OutOfProcSessionStateStore"))
                 {
                     FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
-                    uribaseInfo.SetValue(storeType, "MyAppId");
+                    uribaseInfo.SetValue(storeType, ConfigurationManager.AppSettings["ApplicationId"]);
                 }
             }
         }
