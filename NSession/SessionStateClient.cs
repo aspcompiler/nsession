@@ -30,6 +30,9 @@ namespace NSession
         protected object _lockId;
         protected SessionStateActions _actionFlags;
 
+        protected TimeSpan _executionTimeout = new TimeSpan(0, 1, 50);
+        protected int _sessionTimeout = 1200;
+
         private bool _disposed;
         private dynamic _store;
 
@@ -73,7 +76,33 @@ namespace NSession
             if (isExclusive)
             {
                 _isExclusive = isExclusive;
-                data = _store.GetItemExclusive(_context, _sessionId, out _locked, out _lockAge, out _lockId, out _actionFlags);
+                while (true)
+                { 
+                    data = _store.GetItemExclusive(_context, _sessionId, out _locked, out _lockAge, out _lockId, out _actionFlags);
+                    if (data == null)
+                    {
+                        if (_locked)
+                        {
+                            if (_lockAge > _executionTimeout)
+                            {
+                                _store.ReleaseItemExclusive(_context, _sessionId, _lockId);
+                            }
+                            else
+                            {
+                                System.Threading.Thread.Sleep(500);
+                            }
+                        }
+                        else
+                        {
+                            data = _store.CreateNewStoreData(_context, _sessionTimeout);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
             }
             else
             { 
@@ -108,6 +137,13 @@ namespace NSession
                 string appId = config.AppSettings.Settings["ApplicationId"].Value;
                 SessionStateSection section = (SessionStateSection)config.GetSection("system.web/sessionState");
                 string connstr = section.StateConnectionString;
+                _sessionTimeout = (int)section.Timeout.TotalSeconds;
+
+                HttpRuntimeSection httpRuntimeSection = config.GetSection("httpRuntime") as HttpRuntimeSection;
+                if (httpRuntimeSection != null)
+                {
+                    _executionTimeout = httpRuntimeSection.ExecutionTimeout;
+                }
 
                 Type storeType = Type.GetType("System.Web.SessionState.OutOfProcSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
                 FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);

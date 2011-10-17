@@ -24,7 +24,7 @@ class ATL_NO_VTABLE CReadOnlySession :
 	public IDispatchImpl<IReadOnlySession, &IID_IReadOnlySession, &LIBID_NSessionNativeLib, /*wMajor =*/ 1, /*wMinor =*/ 0>
 {
 public:
-	CComQIPtr<ISessionStateClient> spSessionStateClient;
+	CComQIPtr<NSession::ISessionStateClient> spSessionStateClient;
 	CReadOnlySession()
 	{
 	}
@@ -59,6 +59,8 @@ END_COM_MAP()
 
 	void FinalRelease()
 	{
+		CComQIPtr<mscorlib::IDisposable>  spDisposable = spSessionStateClient;
+		spDisposable->Dispose();
 	}
 
 public:

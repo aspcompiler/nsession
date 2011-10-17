@@ -5,8 +5,8 @@
     'Response.Write o.getSessionVariable("")
 
     //set o = Server.CreateObject("NSession.SessionStateClient")
-    //set o = Server.CreateObject("NSession.Session")
-    set o = Server.CreateObject("NSession.ReadOnlySession")
+    set o = Server.CreateObject("NSession.Session")
+    //set o = Server.CreateObject("NSession.ReadOnlySession")
     //o.GetItemExclusive()
     Response.Write "The session key is "
     Response.Write Session("MyVar")

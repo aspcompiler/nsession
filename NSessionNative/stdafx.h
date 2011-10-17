@@ -24,5 +24,6 @@
 #include <atlcom.h>
 #include <atlctl.h>
 
-#import "..\bin\NSession.tlb" no_namespace 
+#import "mscorlib.tlb"
+#import "..\bin\NSession.tlb"  
 

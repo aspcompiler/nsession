@@ -19,7 +19,7 @@ class ATL_NO_VTABLE CReadWriteSession :
 	public IDispatchImpl<IReadWriteSession, &IID_IReadWriteSession, &LIBID_NSessionNativeLib, /*wMajor =*/ 1, /*wMinor =*/ 0>
 {
 public:
-	CComQIPtr<ISessionStateClient> spSessionStateClient;
+	CComQIPtr<NSession::ISessionStateClient> spSessionStateClient;
 	CReadWriteSession()
 	{
 	}
@@ -55,7 +55,9 @@ END_COM_MAP()
 
 	void FinalRelease()
 	{
-		spSessionStateClient->SetAndReleaseItemExclusive();
+		CComQIPtr<mscorlib::IDisposable>  spDisposable = spSessionStateClient;
+		//spSessionStateClient->SetAndReleaseItemExclusive();
+		spDisposable->Dispose();
 	}
 
 public:
