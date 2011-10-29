@@ -14,22 +14,22 @@ public class NSessionTestApplication : HttpApplication
     public override void Init()
     {
         base.Init();
-        foreach (string moduleName in this.Modules)
-        {
-            IHttpModule module = this.Modules[moduleName];
-            SessionStateModule ssm = module as SessionStateModule;
-            if (ssm != null)
-            {
-                FieldInfo storeInfo = typeof(SessionStateModule).GetField("_store", BindingFlags.Instance | BindingFlags.NonPublic);
-                SessionStateStoreProviderBase store = (SessionStateStoreProviderBase)storeInfo.GetValue(ssm);
-                Type storeType = store.GetType();
-                if (storeType.Name.Equals("OutOfProcSessionStateStore"))
-                {
-                    FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
-                    uribaseInfo.SetValue(storeType, ConfigurationManager.AppSettings["ApplicationId"]);
-                }
-            }
-        }
+        //foreach (string moduleName in this.Modules)
+        //{
+        //    IHttpModule module = this.Modules[moduleName];
+        //    SessionStateModule ssm = module as SessionStateModule;
+        //    if (ssm != null)
+        //    {
+        //        FieldInfo storeInfo = typeof(SessionStateModule).GetField("_store", BindingFlags.Instance | BindingFlags.NonPublic);
+        //        SessionStateStoreProviderBase store = (SessionStateStoreProviderBase)storeInfo.GetValue(ssm);
+        //        Type storeType = store.GetType();
+        //        if (storeType.Name.Equals("OutOfProcSessionStateStore"))
+        //        {
+        //            FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
+        //            uribaseInfo.SetValue(storeType, ConfigurationManager.AppSettings["ApplicationId"]);
+        //        }
+        //    }
+        //}
     }
 
     protected void Application_Start(object sender, EventArgs e)
@@ -52,7 +52,23 @@ public class NSessionTestApplication : HttpApplication
 
     protected void Session_Start(object sender, EventArgs e)
     {
-        // Code that runs when a new session is started
+        foreach (string moduleName in this.Modules)
+        {
+            IHttpModule module = this.Modules[moduleName];
+            SessionStateModule ssm = module as SessionStateModule;
+            if (ssm != null)
+            {
+                FieldInfo storeInfo = typeof(SessionStateModule).GetField("_store", BindingFlags.Instance | BindingFlags.NonPublic);
+                SessionStateStoreProviderBase store = (SessionStateStoreProviderBase)storeInfo.GetValue(ssm);
+                Type storeType = store.GetType();
+                if (storeType.Name.Equals("OutOfProcSessionStateStore"))
+                {
+                    FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
+                    //uribaseInfo.SetValue(storeType, ConfigurationManager.AppSettings["ApplicationId"]);
+                    string uribase = (string)uribaseInfo.GetValue(null);
+                }
+            }
+        }
 
     }
 

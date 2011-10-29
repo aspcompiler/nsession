@@ -131,10 +131,23 @@ namespace NSession
                 _context = new HttpContext(wr);
 
                 string appPhysPath = _request.ServerVariables["APPL_PHYSICAL_PATH"][1];
+                string appMetaDataPath = _request.ServerVariables["APPL_MD_PATH"][1];
                 ExeConfigurationFileMap map = new ExeConfigurationFileMap();
                 map.ExeConfigFilename = appPhysPath + "web.config";
                 Configuration config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
-                string appId = config.AppSettings.Settings["ApplicationId"].Value;
+                //string appId = config.AppSettings.Settings["ApplicationId"].Value;
+                MachineKeySection keySection = (MachineKeySection)config.GetSection("system.web/machineKey");
+                Type keySectionType = typeof(MachineKeySection);
+                MethodInfo configureEncryptionObjectMI = keySectionType.GetMethod("ConfigureEncryptionObject", BindingFlags.Instance | BindingFlags.NonPublic);
+                configureEncryptionObjectMI.Invoke(keySection, new object[] { });
+                FieldInfo s_configFI = keySectionType.GetField("s_config", BindingFlags.Static | BindingFlags.NonPublic);
+                s_configFI.SetValue(null, keySection);
+                FieldInfo s_compatModeFI = keySectionType.GetField("s_compatMode", BindingFlags.Static | BindingFlags.NonPublic);
+                s_compatModeFI.SetValue(null, keySection.CompatibilityMode);
+
+                MethodInfo hashAndBase64EncodeStringMI = keySectionType.GetMethod("HashAndBase64EncodeString", BindingFlags.Static | BindingFlags.NonPublic);
+                string hash = (string)hashAndBase64EncodeStringMI.Invoke(null, new object[] {appMetaDataPath});
+                string appId = string.Format("{0}({1})/", appMetaDataPath, hash);
                 SessionStateSection section = (SessionStateSection)config.GetSection("system.web/sessionState");
                 string connstr = section.StateConnectionString;
                 _sessionTimeout = (int)section.Timeout.TotalSeconds;
