@@ -131,23 +131,17 @@ namespace NSession
                 _context = new HttpContext(wr);
 
                 string appPhysPath = _request.ServerVariables["APPL_PHYSICAL_PATH"][1];
-                string appMetaDataPath = _request.ServerVariables["APPL_MD_PATH"][1];
+                string appDomainAppId = _request.ServerVariables["APPL_MD_PATH"][1];
                 ExeConfigurationFileMap map = new ExeConfigurationFileMap();
                 map.ExeConfigFilename = appPhysPath + "web.config";
                 Configuration config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
-                //string appId = config.AppSettings.Settings["ApplicationId"].Value;
-                MachineKeySection keySection = (MachineKeySection)config.GetSection("system.web/machineKey");
-                Type keySectionType = typeof(MachineKeySection);
-                MethodInfo configureEncryptionObjectMI = keySectionType.GetMethod("ConfigureEncryptionObject", BindingFlags.Instance | BindingFlags.NonPublic);
-                configureEncryptionObjectMI.Invoke(keySection, new object[] { });
-                FieldInfo s_configFI = keySectionType.GetField("s_config", BindingFlags.Static | BindingFlags.NonPublic);
-                s_configFI.SetValue(null, keySection);
-                FieldInfo s_compatModeFI = keySectionType.GetField("s_compatMode", BindingFlags.Static | BindingFlags.NonPublic);
-                s_compatModeFI.SetValue(null, keySection.CompatibilityMode);
+                string uriBaseKey = string.Format("{0}_OUTOFPROCSESSIONSTATESTORE_URIBASE", appDomainAppId);
+                string uribase = Environment.GetEnvironmentVariable(uriBaseKey, EnvironmentVariableTarget.Process);
 
-                MethodInfo hashAndBase64EncodeStringMI = keySectionType.GetMethod("HashAndBase64EncodeString", BindingFlags.Static | BindingFlags.NonPublic);
-                string hash = (string)hashAndBase64EncodeStringMI.Invoke(null, new object[] {appMetaDataPath});
-                string appId = string.Format("{0}({1})/", appMetaDataPath, hash);
+                Type storeType = Type.GetType("System.Web.SessionState.OutOfProcSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+                FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
+                uribaseInfo.SetValue(storeType, uribase);
+
                 SessionStateSection section = (SessionStateSection)config.GetSection("system.web/sessionState");
                 string connstr = section.StateConnectionString;
                 _sessionTimeout = (int)section.Timeout.TotalSeconds;
@@ -158,17 +152,12 @@ namespace NSession
                     _executionTimeout = httpRuntimeSection.ExecutionTimeout;
                 }
 
-                Type storeType = Type.GetType("System.Web.SessionState.OutOfProcSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-                FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
-                uribaseInfo.SetValue(storeType, appId);
-
                 _store = Activator.CreateInstance(storeType);
                 MethodInfo createPartionInfo = storeType.GetMethod("CreatePartitionInfo", BindingFlags.Instance | BindingFlags.NonPublic);
                 dynamic partitionInfo = createPartionInfo.Invoke(_store, new object[] { connstr });
 
                 FieldInfo partitionInfoInfo = storeType.GetField("_partitionInfo", BindingFlags.Instance | BindingFlags.NonPublic);
                 partitionInfoInfo.SetValue(_store, partitionInfo);
-
             }
         }
 

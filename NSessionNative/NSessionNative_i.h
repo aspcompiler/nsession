@@ -3,11 +3,11 @@
 /* this ALWAYS GENERATED file contains the definitions for the interfaces */
 
 
- /* File created by MIDL compiler version 7.00.0555 */
-/* at Sat Oct 15 15:25:11 2011
+ /* File created by MIDL compiler version 8.00.0603 */
+/* at Sun Apr 05 11:33:21 2015
  */
 /* Compiler settings for NSessionNative.idl:
-    Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 7.00.0555 
+    Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0603 
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
     VC __declspec() decoration level: 
@@ -48,12 +48,14 @@
 #ifndef __IReadWriteSession_FWD_DEFINED__
 #define __IReadWriteSession_FWD_DEFINED__
 typedef interface IReadWriteSession IReadWriteSession;
+
 #endif 	/* __IReadWriteSession_FWD_DEFINED__ */
 
 
 #ifndef __IReadOnlySession_FWD_DEFINED__
 #define __IReadOnlySession_FWD_DEFINED__
 typedef interface IReadOnlySession IReadOnlySession;
+
 #endif 	/* __IReadOnlySession_FWD_DEFINED__ */
 
 
@@ -107,6 +109,7 @@ EXTERN_C const IID IID_IReadWriteSession;
     public:
     };
     
+    
 #else 	/* C style interface */
 
     typedef struct IReadWriteSessionVtbl
@@ -117,7 +120,7 @@ EXTERN_C const IID IID_IReadWriteSession;
             IReadWriteSession * This,
             /* [in] */ REFIID riid,
             /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
+            _COM_Outptr_  void **ppvObject);
         
         ULONG ( STDMETHODCALLTYPE *AddRef )( 
             IReadWriteSession * This);
@@ -145,14 +148,22 @@ EXTERN_C const IID IID_IReadWriteSession;
         
         /* [local] */ HRESULT ( STDMETHODCALLTYPE *Invoke )( 
             IReadWriteSession * This,
-            /* [in] */ DISPID dispIdMember,
-            /* [in] */ REFIID riid,
-            /* [in] */ LCID lcid,
-            /* [in] */ WORD wFlags,
-            /* [out][in] */ DISPPARAMS *pDispParams,
-            /* [out] */ VARIANT *pVarResult,
-            /* [out] */ EXCEPINFO *pExcepInfo,
-            /* [out] */ UINT *puArgErr);
+            /* [annotation][in] */ 
+            _In_  DISPID dispIdMember,
+            /* [annotation][in] */ 
+            _In_  REFIID riid,
+            /* [annotation][in] */ 
+            _In_  LCID lcid,
+            /* [annotation][in] */ 
+            _In_  WORD wFlags,
+            /* [annotation][out][in] */ 
+            _In_  DISPPARAMS *pDispParams,
+            /* [annotation][out] */ 
+            _Out_opt_  VARIANT *pVarResult,
+            /* [annotation][out] */ 
+            _Out_opt_  EXCEPINFO *pExcepInfo,
+            /* [annotation][out] */ 
+            _Out_opt_  UINT *puArgErr);
         
         END_INTERFACE
     } IReadWriteSessionVtbl;
@@ -218,6 +229,7 @@ EXTERN_C const IID IID_IReadOnlySession;
     public:
     };
     
+    
 #else 	/* C style interface */
 
     typedef struct IReadOnlySessionVtbl
@@ -228,7 +240,7 @@ EXTERN_C const IID IID_IReadOnlySession;
             IReadOnlySession * This,
             /* [in] */ REFIID riid,
             /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
+            _COM_Outptr_  void **ppvObject);
         
         ULONG ( STDMETHODCALLTYPE *AddRef )( 
             IReadOnlySession * This);
@@ -256,14 +268,22 @@ EXTERN_C const IID IID_IReadOnlySession;
         
         /* [local] */ HRESULT ( STDMETHODCALLTYPE *Invoke )( 
             IReadOnlySession * This,
-            /* [in] */ DISPID dispIdMember,
-            /* [in] */ REFIID riid,
-            /* [in] */ LCID lcid,
-            /* [in] */ WORD wFlags,
-            /* [out][in] */ DISPPARAMS *pDispParams,
-            /* [out] */ VARIANT *pVarResult,
-            /* [out] */ EXCEPINFO *pExcepInfo,
-            /* [out] */ UINT *puArgErr);
+            /* [annotation][in] */ 
+            _In_  DISPID dispIdMember,
+            /* [annotation][in] */ 
+            _In_  REFIID riid,
+            /* [annotation][in] */ 
+            _In_  LCID lcid,
+            /* [annotation][in] */ 
+            _In_  WORD wFlags,
+            /* [annotation][out][in] */ 
+            _In_  DISPPARAMS *pDispParams,
+            /* [annotation][out] */ 
+            _Out_opt_  VARIANT *pVarResult,
+            /* [annotation][out] */ 
+            _Out_opt_  EXCEPINFO *pExcepInfo,
+            /* [annotation][out] */ 
+            _Out_opt_  UINT *puArgErr);
         
         END_INTERFACE
     } IReadOnlySessionVtbl;

@@ -14,28 +14,11 @@ public class NSessionTestApplication : HttpApplication
     public override void Init()
     {
         base.Init();
-        //foreach (string moduleName in this.Modules)
-        //{
-        //    IHttpModule module = this.Modules[moduleName];
-        //    SessionStateModule ssm = module as SessionStateModule;
-        //    if (ssm != null)
-        //    {
-        //        FieldInfo storeInfo = typeof(SessionStateModule).GetField("_store", BindingFlags.Instance | BindingFlags.NonPublic);
-        //        SessionStateStoreProviderBase store = (SessionStateStoreProviderBase)storeInfo.GetValue(ssm);
-        //        Type storeType = store.GetType();
-        //        if (storeType.Name.Equals("OutOfProcSessionStateStore"))
-        //        {
-        //            FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
-        //            uribaseInfo.SetValue(storeType, ConfigurationManager.AppSettings["ApplicationId"]);
-        //        }
-        //    }
-        //}
     }
 
     protected void Application_Start(object sender, EventArgs e)
     {
         // Code that runs on application startup
-
     }
 
     protected void Application_End(object sender, EventArgs e)
@@ -52,24 +35,31 @@ public class NSessionTestApplication : HttpApplication
 
     protected void Session_Start(object sender, EventArgs e)
     {
-        foreach (string moduleName in this.Modules)
-        {
-            IHttpModule module = this.Modules[moduleName];
-            SessionStateModule ssm = module as SessionStateModule;
-            if (ssm != null)
+        string appDomainAppId = HttpRuntime.AppDomainAppId;
+        string uriBaseKey = string.Format("{0}_OUTOFPROCSESSIONSTATESTORE_URIBASE", appDomainAppId);
+        string uribase = Environment.GetEnvironmentVariable(uriBaseKey, EnvironmentVariableTarget.Process);
+
+        if (string.IsNullOrEmpty(uribase))
+        { 
+            foreach (string moduleName in this.Modules)
             {
-                FieldInfo storeInfo = typeof(SessionStateModule).GetField("_store", BindingFlags.Instance | BindingFlags.NonPublic);
-                SessionStateStoreProviderBase store = (SessionStateStoreProviderBase)storeInfo.GetValue(ssm);
-                Type storeType = store.GetType();
-                if (storeType.Name.Equals("OutOfProcSessionStateStore"))
+                IHttpModule module = this.Modules[moduleName];
+                SessionStateModule ssm = module as SessionStateModule;
+                if (ssm != null)
                 {
-                    FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
-                    //uribaseInfo.SetValue(storeType, ConfigurationManager.AppSettings["ApplicationId"]);
-                    string uribase = (string)uribaseInfo.GetValue(null);
+                    FieldInfo storeInfo = typeof(SessionStateModule).GetField("_store", BindingFlags.Instance | BindingFlags.NonPublic);
+                    SessionStateStoreProviderBase store = (SessionStateStoreProviderBase)storeInfo.GetValue(ssm);
+                    Type storeType = store.GetType();
+                    if (storeType.Name.Equals("OutOfProcSessionStateStore"))
+                    {
+                        FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
+                        uribase = (string)uribaseInfo.GetValue(null);
+                        Environment.SetEnvironmentVariable(uriBaseKey, uribase, 
+                            EnvironmentVariableTarget.Process);
+                    }
                 }
             }
         }
-
     }
 
     protected void Session_End(object sender, EventArgs e)

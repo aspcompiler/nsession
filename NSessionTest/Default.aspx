@@ -9,7 +9,8 @@
 <body>
     <form id="form1" runat="server">
     <div>
-        I just save a secret to MyVar session state variable. Go to <a href="Test.asp">a classic asp page</a> to see if it knows my secret.
+        I save a secret to MyVar state variable. Go to <a href="Test.asp">a classic asp page</a> to see my secret.
+
         <%= Session["MyVar2"]%>
     </div>
     </form>
