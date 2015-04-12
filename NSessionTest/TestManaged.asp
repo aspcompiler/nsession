@@ -10,12 +10,12 @@
     set o = Server.CreateObject("NSession.SessionStateClient")
     o.GetItemExclusive() 'Get items and lock sesison for write
     'o.GetItems() 'Get items without locking the session. Things you write to session will not propagate. No need to call SetAndReleaseItemExclusive.
-    Response.Write "The secret is "
-    Response.Write Session("MyVar")
-    Session("MyVar2") = "This is the secret saved by the asp classic page."
+    Response.Write "The value from ASP.NET is: "
+    Response.Write Session("ASPNetVar")
+    Session("ASPClassicVar") = "Hello from ASP Classic."
     o.SetAndReleaseItemExclusive() 'Unlock session
  %>
 <br />
-I added my secret to the MyVar2 variable. Go back to the <a href="Default.aspx">default page</a> to see my secret. 
+I saved a value to to the ASPClassicVar variable. Go back to the <a href="Test.aspx">ASP.NET page</a> to see the value. 
 </body>
 </html>

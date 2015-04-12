@@ -9,11 +9,11 @@
 
     set o = Server.CreateObject("NSession.Session")
     'set o = Server.CreateObject("NSession.ReadOnlySession")
-    Response.Write "The secret is "
-    Response.Write Session("MyVar")
-    Session("MyVar2") = "Secret saved by the asp classic page."
+    Response.Write "The value from ASP.NET is: "
+    Response.Write Session("ASPNetVar")
+    Session("ASPClassicVar") = "Hello from ASP Classic."
 %>
 <br />
-I added my secret to the MyVar2 variable. Go back to the <a href="Default.aspx">default page</a> to see my secret. 
+I saved a value to to the ASPClassicVar variable. Go back to the <a href="Test.aspx">ASP.NET page</a> to see the value. 
 </body>
 </html>
