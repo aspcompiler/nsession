@@ -29,6 +29,7 @@ namespace NSession
         protected TimeSpan _lockAge;
         protected object _lockId;
         protected SessionStateActions _actionFlags;
+        protected bool _newItem;
 
         protected TimeSpan _executionTimeout = new TimeSpan(0, 1, 50);
         protected int _sessionTimeout = 1200;
@@ -50,7 +51,7 @@ namespace NSession
 
         public void SetAndReleaseItemExclusive()
         {
-            Init();
+            //Init();
 
             if (_isExclusive)
             {
@@ -61,7 +62,7 @@ namespace NSession
                 }
 
                 SessionStateStoreData data = new SessionStateStoreData(sessionItems, null, 20);
-                _store.SetAndReleaseItemExclusive(_context, _sessionId, data, _lockId, true);
+                _store.SetAndReleaseItemExclusive(_context, _sessionId, data, _lockId, _newItem);
                 _isExclusive = false;
             }
         }
@@ -108,11 +109,20 @@ namespace NSession
             { 
                 data = _store.GetItem(_context, _sessionId, out _locked, out _lockAge, out _lockId, out _actionFlags);
             }
-            ISessionStateItemCollection sessionItems = data.Items;
-            
-            foreach (string key in sessionItems.Keys)
+
+            if (data != null)
             {
-                _session[key] = sessionItems[key];
+                _newItem = false;
+                ISessionStateItemCollection sessionItems = data.Items;
+
+                foreach (string key in sessionItems.Keys)
+                {
+                    _session[key] = sessionItems[key];
+                }
+            }
+            else
+            {
+                _newItem = true;
             }
         }
 
@@ -135,15 +145,47 @@ namespace NSession
                 ExeConfigurationFileMap map = new ExeConfigurationFileMap();
                 map.ExeConfigFilename = appPhysPath + "web.config";
                 Configuration config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
-                string uriBaseKey = string.Format("{0}_OUTOFPROCSESSIONSTATESTORE_URIBASE", appDomainAppId);
-                string uribase = Environment.GetEnvironmentVariable(uriBaseKey, EnvironmentVariableTarget.Process);
-
-                Type storeType = Type.GetType("System.Web.SessionState.OutOfProcSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-                FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
-                uribaseInfo.SetValue(storeType, uribase);
 
                 SessionStateSection section = (SessionStateSection)config.GetSection("system.web/sessionState");
-                string connstr = section.StateConnectionString;
+                Type storeType = null;
+                string connstr = null;
+                switch(section.Mode)
+                { 
+                    case SessionStateMode.StateServer:
+                        string uriBaseKey = string.Format("{0}_OUTOFPROCSESSIONSTATESTORE_URIBASE", appDomainAppId);
+                        string uribase = Environment.GetEnvironmentVariable(uriBaseKey, EnvironmentVariableTarget.Process);
+
+                        storeType = Type.GetType("System.Web.SessionState.OutOfProcSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+                        SetPrivateStaticField(storeType, "s_uribase", uribase);
+                        connstr = section.StateConnectionString;
+                        _store = Activator.CreateInstance(storeType);
+
+                        break;
+                    case SessionStateMode.SQLServer:
+                        storeType = Type.GetType("System.Web.SessionState.SqlSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+                        SetPrivateStaticField(storeType, "s_commandTimeout", (int)section.SqlCommandTimeout.TotalSeconds);
+                        //SetPrivateStaticField(storeType, "s_configSqlConnectionFileName", section.ElementInformation.Properties["sqlConnectionString"].Source);
+                        //SetPrivateStaticField(storeType, "s_configSqlConnectionLineNumber", section.ElementInformation.Properties["sqlConnectionString"].LineNumber);
+                        SetPrivateStaticField(storeType, "s_configAllowCustomSqlDatabase", section.AllowCustomSqlDatabase);
+                        connstr = section.SqlConnectionString;
+
+                        //http://blogs.msdn.com/b/kirillosenkov/archive/2009/07/21/instantiating-types-with-no-public-constructors.aspx
+                        var ctor = storeType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
+                        _store = ctor.Invoke(null);
+
+                        Type httpRunTimeType = typeof(HttpRuntime);
+                        HttpRuntime theRunTime = (HttpRuntime)GetPrivateStaticField(httpRunTimeType, "_theRuntime");
+                        SetPrivateInstanceField(httpRunTimeType, "_appDomainAppId", theRunTime, appDomainAppId);
+
+                        break;
+                }
+
+                
+                MethodInfo createPartionInfo = storeType.GetMethod("CreatePartitionInfo", BindingFlags.Instance | BindingFlags.NonPublic);
+                dynamic partitionInfo = createPartionInfo.Invoke(_store, new object[] { connstr });
+
+                SetPrivateInstanceField(storeType, "_partitionInfo", _store, partitionInfo);
+
                 _sessionTimeout = (int)section.Timeout.TotalSeconds;
 
                 HttpRuntimeSection httpRuntimeSection = config.GetSection("httpRuntime") as HttpRuntimeSection;
@@ -151,16 +193,8 @@ namespace NSession
                 {
                     _executionTimeout = httpRuntimeSection.ExecutionTimeout;
                 }
-
-                _store = Activator.CreateInstance(storeType);
-                MethodInfo createPartionInfo = storeType.GetMethod("CreatePartitionInfo", BindingFlags.Instance | BindingFlags.NonPublic);
-                dynamic partitionInfo = createPartionInfo.Invoke(_store, new object[] { connstr });
-
-                FieldInfo partitionInfoInfo = storeType.GetField("_partitionInfo", BindingFlags.Instance | BindingFlags.NonPublic);
-                partitionInfoInfo.SetValue(_store, partitionInfo);
             }
         }
-
 
         #region IDisposable Members
 
@@ -193,6 +227,24 @@ namespace NSession
                 _isExclusive = false;
                 _disposed = true;
             }
+        }
+
+        private static void SetPrivateStaticField(Type type, string member, object value)
+        {
+            FieldInfo fi = type.GetField(member, BindingFlags.Static | BindingFlags.NonPublic);
+            fi.SetValue(type, value);
+        }
+
+        private static object GetPrivateStaticField(Type type, string member)
+        {
+            FieldInfo fi = type.GetField(member, BindingFlags.Static | BindingFlags.NonPublic);
+            return fi.GetValue(type);
+        }
+
+        private static void SetPrivateInstanceField(Type type, string member, object instance, object value)
+        {
+            FieldInfo fi = type.GetField(member, BindingFlags.Instance | BindingFlags.NonPublic);
+            fi.SetValue(instance, value);
         }
 
     }
