@@ -9,7 +9,7 @@
 
     set o = Server.CreateObject("NSession.SessionStateClient")
     o.GetItemExclusive() 'Get items and lock sesison for write
-    'o.GetItems() 'Get items without locking the session. Things you write to session will not propagate. No need to call SetAndReleaseItemExclusive.
+    'o.GetItem() 'Get items without locking the session. Things you write to session will not propagate. No need to call SetAndReleaseItemExclusive.
     Response.Write "The value from ASP.NET is: "
     Response.Write Session("ASPNetVar")
     Session("ASPClassicVar") = "Hello from ASP Classic."

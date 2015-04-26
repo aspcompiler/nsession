@@ -32,7 +32,7 @@ namespace NSession
         protected bool _newItem;
 
         protected TimeSpan _executionTimeout = new TimeSpan(0, 1, 50);
-        protected int _sessionTimeout = 1200;
+        protected int _sessionTimeout = 20;
 
         private bool _disposed;
         private dynamic _store;
@@ -61,7 +61,7 @@ namespace NSession
                     sessionItems[key] = _session[key];
                 }
 
-                SessionStateStoreData data = new SessionStateStoreData(sessionItems, null, 20);
+                SessionStateStoreData data = new SessionStateStoreData(sessionItems, null, _sessionTimeout);
                 _store.SetAndReleaseItemExclusive(_context, _sessionId, data, _lockId, _newItem);
                 _isExclusive = false;
             }
@@ -186,7 +186,7 @@ namespace NSession
 
                 SetPrivateInstanceField(storeType, "_partitionInfo", _store, partitionInfo);
 
-                _sessionTimeout = (int)section.Timeout.TotalSeconds;
+                _sessionTimeout = (int)section.Timeout.TotalMinutes;
 
                 HttpRuntimeSection httpRuntimeSection = config.GetSection("httpRuntime") as HttpRuntimeSection;
                 if (httpRuntimeSection != null)

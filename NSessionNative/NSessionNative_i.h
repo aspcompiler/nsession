@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 8.00.0603 */
-/* at Sat Apr 11 22:45:45 2015
+/* at Sun Apr 26 12:09:41 2015
  */
 /* Compiler settings for NSessionNative.idl:
     Oicf, W1, Zp8, env=Win64 (32b run), target_arch=AMD64 8.00.0603 
