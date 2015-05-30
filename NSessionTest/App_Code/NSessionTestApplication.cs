@@ -54,7 +54,7 @@ public class NSessionTestApplication : HttpApplication
                     {
                         FieldInfo uribaseInfo = storeType.GetField("s_uribase", BindingFlags.Static | BindingFlags.NonPublic);
                         uribase = (string)uribaseInfo.GetValue(null);
-                        Environment.SetEnvironmentVariable(uriBaseKey, uribase, 
+                        Environment.SetEnvironmentVariable(uriBaseKey, uribase,
                             EnvironmentVariableTarget.Process);
                     }
                 }

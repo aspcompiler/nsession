@@ -74,8 +74,8 @@
   <ItemGroup>
     <Compile Include="AspWorkerRequest.cs" />
     <Compile Include="ISessionStateClient.cs" />
-    <Compile Include="SessionStateClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SessionStateClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="ASPTypeLibrary">

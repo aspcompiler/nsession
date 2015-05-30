@@ -51,8 +51,6 @@ namespace NSession
 
         public void SetAndReleaseItemExclusive()
         {
-            //Init();
-
             if (_isExclusive)
             {
                 SessionStateItemCollection sessionItems = new SessionStateItemCollection();
@@ -71,7 +69,8 @@ namespace NSession
 
         protected void GetItemInternal(bool isExclusive)
         {
-            Init();
+            if (_store == null)
+                Init();
 
             SessionStateStoreData data;
             if (isExclusive)
@@ -110,6 +109,8 @@ namespace NSession
                 data = _store.GetItem(_context, _sessionId, out _locked, out _lockAge, out _lockId, out _actionFlags);
             }
 
+            _session.Contents.RemoveAll();
+
             if (data != null)
             {
                 _newItem = false;
@@ -142,11 +143,18 @@ namespace NSession
 
                 string appPhysPath = _request.ServerVariables["APPL_PHYSICAL_PATH"][1];
                 string appDomainAppId = _request.ServerVariables["APPL_MD_PATH"][1];
+
                 ExeConfigurationFileMap map = new ExeConfigurationFileMap();
                 map.ExeConfigFilename = appPhysPath + "web.config";
                 Configuration config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
-
                 SessionStateSection section = (SessionStateSection)config.GetSection("system.web/sessionState");
+                HttpRuntimeSection httpRuntimeSection = config.GetSection("httpRuntime") as HttpRuntimeSection;
+
+                if (httpRuntimeSection != null)
+                {
+                    _executionTimeout = httpRuntimeSection.ExecutionTimeout;
+                }
+
                 Type storeType = null;
                 string connstr = null;
                 switch(section.Mode)
@@ -187,12 +195,6 @@ namespace NSession
                 SetPrivateInstanceField(storeType, "_partitionInfo", _store, partitionInfo);
 
                 _sessionTimeout = (int)section.Timeout.TotalMinutes;
-
-                HttpRuntimeSection httpRuntimeSection = config.GetSection("httpRuntime") as HttpRuntimeSection;
-                if (httpRuntimeSection != null)
-                {
-                    _executionTimeout = httpRuntimeSection.ExecutionTimeout;
-                }
             }
         }
 

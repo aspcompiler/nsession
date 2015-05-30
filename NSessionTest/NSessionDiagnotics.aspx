@@ -62,7 +62,7 @@
                     Response.Write("<p>You are using ASP.NET State Server session state.</p>");
                     Response.Write(string.Format("<p>The ASP.NET State Server session state connection string is: {0}.</p>", sessionStateSection.StateConnectionString));
                     Response.Write("<p>NSession needs you to set the computed UriBase to the process environment variable.</p>");
-                    Response.Write("<p>You can compute the value once for your application and then add the following code to the Application_Start in your global.aspx:</p>");
+                    Response.Write("<p>You can compute the value once for your application and then add the following code to the Application_Start in your global.aspx or set it as system environment variable:</p>");
                     try
                     {
                         Response.Write(string.Format(@"<pre>
@@ -132,7 +132,8 @@ Environment.SetEnvironmentVariable(""{0}_OUTOFPROCSESSIONSTATESTORE_URIBASE"", "
                 try
                 { 
                     Object o = Activator.CreateInstance(managedNSessionType);
-                    Response.Write("<p>Managed NSession.dll registered correctly.</p>");
+                    var versionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(managedNSessionType.Assembly.Location);
+                    Response.Write(String.Format("<p>Managed NSession.dll v{0} registered correctly.</p>", versionInfo.FileVersion));
                 }
                 catch(Exception ex)
                 {
