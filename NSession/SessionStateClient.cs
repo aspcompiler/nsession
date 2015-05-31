@@ -35,7 +35,7 @@ namespace NSession
         protected int _sessionTimeout = 20;
 
         private bool _disposed;
-        private dynamic _store;
+        private static dynamic _store;
 
         #region ISessionStateClient Members
 
@@ -69,8 +69,7 @@ namespace NSession
 
         protected void GetItemInternal(bool isExclusive)
         {
-            if (_store == null)
-                Init();
+            Init();
 
             SessionStateStoreData data;
             if (isExclusive)
@@ -141,61 +140,67 @@ namespace NSession
                 AspWorkerRequest wr = new AspWorkerRequest(_request);
                 _context = new HttpContext(wr);
 
-                string appPhysPath = _request.ServerVariables["APPL_PHYSICAL_PATH"][1];
-                string appDomainAppId = _request.ServerVariables["APPL_MD_PATH"][1];
-
-                ExeConfigurationFileMap map = new ExeConfigurationFileMap();
-                map.ExeConfigFilename = appPhysPath + "web.config";
-                Configuration config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
-                SessionStateSection section = (SessionStateSection)config.GetSection("system.web/sessionState");
-                HttpRuntimeSection httpRuntimeSection = config.GetSection("httpRuntime") as HttpRuntimeSection;
-
-                if (httpRuntimeSection != null)
-                {
-                    _executionTimeout = httpRuntimeSection.ExecutionTimeout;
-                }
-
-                Type storeType = null;
-                string connstr = null;
-                switch(section.Mode)
-                { 
-                    case SessionStateMode.StateServer:
-                        string uriBaseKey = string.Format("{0}_OUTOFPROCSESSIONSTATESTORE_URIBASE", appDomainAppId);
-                        string uribase = Environment.GetEnvironmentVariable(uriBaseKey, EnvironmentVariableTarget.Process);
-
-                        storeType = Type.GetType("System.Web.SessionState.OutOfProcSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-                        SetPrivateStaticField(storeType, "s_uribase", uribase);
-                        connstr = section.StateConnectionString;
-                        _store = Activator.CreateInstance(storeType);
-
-                        break;
-                    case SessionStateMode.SQLServer:
-                        storeType = Type.GetType("System.Web.SessionState.SqlSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-                        SetPrivateStaticField(storeType, "s_commandTimeout", (int)section.SqlCommandTimeout.TotalSeconds);
-                        //SetPrivateStaticField(storeType, "s_configSqlConnectionFileName", section.ElementInformation.Properties["sqlConnectionString"].Source);
-                        //SetPrivateStaticField(storeType, "s_configSqlConnectionLineNumber", section.ElementInformation.Properties["sqlConnectionString"].LineNumber);
-                        SetPrivateStaticField(storeType, "s_configAllowCustomSqlDatabase", section.AllowCustomSqlDatabase);
-                        connstr = section.SqlConnectionString;
-
-                        //http://blogs.msdn.com/b/kirillosenkov/archive/2009/07/21/instantiating-types-with-no-public-constructors.aspx
-                        var ctor = storeType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
-                        _store = ctor.Invoke(null);
-
-                        Type httpRunTimeType = typeof(HttpRuntime);
-                        HttpRuntime theRunTime = (HttpRuntime)GetPrivateStaticField(httpRunTimeType, "_theRuntime");
-                        SetPrivateInstanceField(httpRunTimeType, "_appDomainAppId", theRunTime, appDomainAppId);
-
-                        break;
-                }
-
-                
-                MethodInfo createPartionInfo = storeType.GetMethod("CreatePartitionInfo", BindingFlags.Instance | BindingFlags.NonPublic);
-                dynamic partitionInfo = createPartionInfo.Invoke(_store, new object[] { connstr });
-
-                SetPrivateInstanceField(storeType, "_partitionInfo", _store, partitionInfo);
-
-                _sessionTimeout = (int)section.Timeout.TotalMinutes;
+                if (_store == null)
+                    OneTimeInit();
             }
+        }
+
+        private void OneTimeInit()
+        {
+            string appPhysPath = _request.ServerVariables["APPL_PHYSICAL_PATH"][1];
+            string appDomainAppId = _request.ServerVariables["APPL_MD_PATH"][1];
+
+            ExeConfigurationFileMap map = new ExeConfigurationFileMap();
+            map.ExeConfigFilename = appPhysPath + "web.config";
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
+            SessionStateSection section = (SessionStateSection)config.GetSection("system.web/sessionState");
+            HttpRuntimeSection httpRuntimeSection = config.GetSection("httpRuntime") as HttpRuntimeSection;
+
+            if (httpRuntimeSection != null)
+            {
+                _executionTimeout = httpRuntimeSection.ExecutionTimeout;
+            }
+
+            Type storeType = null;
+            string connstr = null;
+            switch (section.Mode)
+            {
+                case SessionStateMode.StateServer:
+                    string uriBaseKey = string.Format("{0}_OUTOFPROCSESSIONSTATESTORE_URIBASE", appDomainAppId);
+                    string uribase = Environment.GetEnvironmentVariable(uriBaseKey, EnvironmentVariableTarget.Process);
+
+                    storeType = Type.GetType("System.Web.SessionState.OutOfProcSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+                    SetPrivateStaticField(storeType, "s_uribase", uribase);
+                    connstr = section.StateConnectionString;
+                    _store = Activator.CreateInstance(storeType);
+
+                    break;
+                case SessionStateMode.SQLServer:
+                    storeType = Type.GetType("System.Web.SessionState.SqlSessionStateStore, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+                    SetPrivateStaticField(storeType, "s_commandTimeout", (int)section.SqlCommandTimeout.TotalSeconds);
+                    //SetPrivateStaticField(storeType, "s_configSqlConnectionFileName", section.ElementInformation.Properties["sqlConnectionString"].Source);
+                    //SetPrivateStaticField(storeType, "s_configSqlConnectionLineNumber", section.ElementInformation.Properties["sqlConnectionString"].LineNumber);
+                    SetPrivateStaticField(storeType, "s_configAllowCustomSqlDatabase", section.AllowCustomSqlDatabase);
+                    connstr = section.SqlConnectionString;
+
+                    //http://blogs.msdn.com/b/kirillosenkov/archive/2009/07/21/instantiating-types-with-no-public-constructors.aspx
+                    var ctor = storeType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new Type[0], null);
+                    _store = ctor.Invoke(null);
+
+                    Type httpRunTimeType = typeof(HttpRuntime);
+                    HttpRuntime theRunTime = (HttpRuntime)GetPrivateStaticField(httpRunTimeType, "_theRuntime");
+                    SetPrivateInstanceField(httpRunTimeType, "_appDomainAppId", theRunTime, appDomainAppId);
+
+                    break;
+            }
+
+
+            MethodInfo createPartionInfo = storeType.GetMethod("CreatePartitionInfo", BindingFlags.Instance | BindingFlags.NonPublic);
+            dynamic partitionInfo = createPartionInfo.Invoke(_store, new object[] { connstr });
+
+            SetPrivateInstanceField(storeType, "_partitionInfo", _store, partitionInfo);
+
+            _sessionTimeout = (int)section.Timeout.TotalMinutes;
         }
 
         #region IDisposable Members
