@@ -14,6 +14,8 @@
     Session("ASPClassicVar") = "Hello from ASP Classic."
 %>
 <br />
+The session variable from MVC page is <%= Session("MVCSession") %>
+<br />
 I saved a value to to the ASPClassicVar variable. Go back to the <a href="Test.aspx">ASP.NET page</a> to see the value. 
 </body>
 </html>

@@ -5,6 +5,8 @@ using System.Web;
 using System.Web.SessionState;
 using System.Reflection;
 using System.Configuration;
+using System.Web.Mvc;
+using System.Web.Routing;
 
 /// <summary>
 /// Summary description for NSessionTestApplication
@@ -18,7 +20,7 @@ public class NSessionTestApplication : HttpApplication
 
     protected void Application_Start(object sender, EventArgs e)
     {
-        // Code that runs on application startup
+        RouteConfig.RegisterRoutes(RouteTable.Routes);
     }
 
     protected void Application_End(object sender, EventArgs e)

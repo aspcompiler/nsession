@@ -1,0 +1,19 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>MVC Home</title>
+</head>
+<body>
+    <div>
+        MVC Home Pages<br />
+        The session data saved by asp classic page is: @ViewBag.AspClassicData <br />
+        Go to <a href='@Url.Content("~/Test.asp")'>a classic asp page</a> to see my secret.
+    </div>
+</body>
+</html>
